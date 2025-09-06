@@ -16,9 +16,9 @@ transforms = A.Compose(
         ]
     )
 
-model = DETR(num_classes=8)
+model = DETR(num_classes=3)
 model.eval()
-model.load_pretrained('checkpoints/200_model.pt')
+model.load_pretrained('checkpoints/40_model.pt')
 CLASSES = get_classes() 
 COLORS = get_colors() 
 

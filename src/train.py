@@ -20,11 +20,11 @@ if __name__ == '__main__':
     test_dataset = DETRData('data/test', train=False) 
     test_dataloader = DataLoader(test_dataset, batch_size=4, collate_fn=stacker, drop_last=True) 
 
-    num_classes = 8 
+    num_classes = 3 
     model = DETR(num_classes=num_classes)
     
-    # Load pretrained weights to continue training
-    model.load_pretrained('pretrained/200_model.pt')
+    # Optional: Load pretrained weights to continue training
+    model.load_pretrained('pretrained/4426_model.pt')
     
     model.log_model_info()
     model.train() 
@@ -38,7 +38,7 @@ if __name__ == '__main__':
 
     train_batches = len(train_dataloader)
     test_batches = len(test_dataloader)
-    epochs = 1000
+    epochs = 100
     
     print("\n--- Training Configuration ---")
     print(f"Total Epochs: {epochs}")
@@ -103,7 +103,7 @@ if __name__ == '__main__':
         print(f"Average Test Loss: {avg_test_loss:.4f}\n")
 
         # Save checkpoint periodically
-        if (epoch + 1) % 100 == 0: 
+        if (epoch + 1) % 10 == 0: 
             checkpoint_path = f"checkpoints/{epoch+1}_model.pt"
             save(model.state_dict(), checkpoint_path)
             print(f"Checkpoint saved to {checkpoint_path}")
