@@ -11,7 +11,7 @@ import os
 if __name__ == '__main__': 
     print("--- Starting Training Script ---")
     
-    # Create checkpoint directory if it doesn't exist
+    #Create checkpoint directory if it doesn't exist
     os.makedirs("checkpoints", exist_ok=True)
     
     train_dataset = DETRData('data/train', train=True) 
@@ -23,8 +23,8 @@ if __name__ == '__main__':
     num_classes = 3 
     model = DETR(num_classes=num_classes)
     
-    # Optional: Load pretrained weights to continue training
-    model.load_pretrained('pretrained/4426_model.pt')
+    #Load pretrained weights to continue training
+    #model.load_pretrained('pretrained/4426_model.pt')
     
     model.log_model_info()
     model.train() 
@@ -70,7 +70,7 @@ if __name__ == '__main__':
                 losses.backward()
                 opt.step()
                 
-                # Print progress on the same line
+                #Print progress on the same line
                 print(f"\rTraining Batch {batch_idx+1}/{train_batches} | Loss: {losses.item():.4f}", end="")
                 
             except Exception as e: 
@@ -78,7 +78,7 @@ if __name__ == '__main__':
                 print(f"Batch targets causing error: {str(y)}")
                 sys.exit()
         
-        # Newline after completing all batches in an epoch
+        #Newline after completing all batches in an epoch
         print()
         avg_train_loss = train_epoch_loss / train_batches
         print(f"Average Training Loss: {avg_train_loss:.4f}")
@@ -102,13 +102,13 @@ if __name__ == '__main__':
         avg_test_loss = test_epoch_loss / test_batches
         print(f"Average Test Loss: {avg_test_loss:.4f}\n")
 
-        # Save checkpoint periodically
-        if (epoch + 1) % 10 == 0: 
+        #Save checkpoint periodically
+        if (epoch + 1) % 10 == 0: #dividing by 10 means after every 10 epoch it will create checkpoints
             checkpoint_path = f"checkpoints/{epoch+1}_model.pt"
             save(model.state_dict(), checkpoint_path)
             print(f"Checkpoint saved to {checkpoint_path}")
             
-    # Save the final model
+    #Save the final model
     final_path = f"checkpoints/final_model.pt"
     save(model.state_dict(), final_path)
     print(f"Final model saved to {final_path}")

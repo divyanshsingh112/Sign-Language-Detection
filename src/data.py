@@ -25,7 +25,7 @@ class DETRData(Dataset):
         print("---------------------------------")
 
     def safe_transform(self, image, bboxes, labels, max_attempts=50):
-        # Define transforms, applying some only during training
+        #Define transforms, applying some only during training
         transform_list = [   
             A.Resize(500, 500),
             *([A.RandomCrop(width=224, height=224, p=0.33)] if self.train else []),
@@ -41,7 +41,7 @@ class DETRData(Dataset):
             bbox_params=A.BboxParams(format='yolo', label_fields=['class_labels'])
         )
         
-        # Attempt to apply transforms; useful if cropping removes all bboxes
+        #Attempt to apply transforms; useful if cropping removes all bboxes
         for _ in range(max_attempts):
             try:
                 transformed = transform(image=image, bboxes=bboxes, class_labels=labels)
@@ -50,7 +50,7 @@ class DETRData(Dataset):
             except Exception:
                 continue
         
-        # If all attempts fail, return a non-augmented version (just resized and normalized)
+        #If all attempts fail, return a non-augmented version 
         base_transform = A.Compose([
             A.Resize(224, 224),
             A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
