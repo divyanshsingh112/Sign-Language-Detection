@@ -8,10 +8,14 @@ from utils.boxes import stacker
 import sys
 import os
 
+#Define the device to use (GPU if available, otherwise CPU)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"--- Using device: {device} ---")
+
 if __name__ == '__main__': 
     print("--- Starting Training Script ---")
     
-    #Create checkpoint directory if it doesn't exist
+    # Create checkpoint directory if it doesn't exist
     os.makedirs("checkpoints", exist_ok=True)
     
     train_dataset = DETRData('data/train', train=True) 
@@ -20,11 +24,13 @@ if __name__ == '__main__':
     test_dataset = DETRData('data/test', train=False) 
     test_dataloader = DataLoader(test_dataset, batch_size=4, collate_fn=stacker, drop_last=True) 
 
-    num_classes = 3 
+    num_classes = 8 
     model = DETR(num_classes=num_classes)
     
-    #Load pretrained weights to continue training
-    #model.load_pretrained('pretrained/4426_model.pt')
+    model.load_pretrained('pretrained/final_model.pt')
+    
+    #Move the model to the selected device (GPU)
+    model.to(device)
     
     model.log_model_info()
     model.train() 
@@ -35,10 +41,11 @@ if __name__ == '__main__':
     weights = {'class_weighting': 1, 'bbox_weighting': 5, 'giou_weighting': 2}
     matcher = HungarianMatcher(weights)
     criterion = DETRLoss(num_classes=num_classes, matcher=matcher, weight_dict=weights, eos_coef=0.1)
+    criterion.to(device)
 
     train_batches = len(train_dataloader)
     test_batches = len(test_dataloader)
-    epochs = 100
+    epochs = 4000
     
     print("\n--- Training Configuration ---")
     print(f"Total Epochs: {epochs}")
@@ -55,8 +62,16 @@ if __name__ == '__main__':
         print(f"--- Epoch {epoch+1}/{epochs} ---")
         for batch_idx, batch in enumerate(train_dataloader): 
             X, y = batch
+            
+            #Move the data batch to the device
+            X_list = [img.to(device) for img in X]
+            y = [{k: v.to(device) for k, v in t.items()} for t in y]
+            
+            #Stack the list of tensors into a single batch tensor
+            X_stacked = torch.stack(X_list, dim=0)
+            
             try: 
-                yhat = model(X) 
+                yhat = model(X_stacked) #Pass the stacked tensor to the model
                 loss_dict = criterion(yhat, y) 
                 weight_dict = criterion.weight_dict
                 
@@ -70,7 +85,6 @@ if __name__ == '__main__':
                 losses.backward()
                 opt.step()
                 
-                #Print progress on the same line
                 print(f"\rTraining Batch {batch_idx+1}/{train_batches} | Loss: {losses.item():.4f}", end="")
                 
             except Exception as e: 
@@ -78,7 +92,6 @@ if __name__ == '__main__':
                 print(f"Batch targets causing error: {str(y)}")
                 sys.exit()
         
-        #Newline after completing all batches in an epoch
         print()
         avg_train_loss = train_epoch_loss / train_batches
         print(f"Average Training Loss: {avg_train_loss:.4f}")
@@ -91,7 +104,13 @@ if __name__ == '__main__':
         with torch.no_grad():
             for batch_idx, batch in enumerate(test_dataloader):
                 X, y = batch
-                yhat = model(X)
+                
+                #Also move and stack validation data
+                X_list = [img.to(device) for img in X]
+                y = [{k: v.to(device) for k, v in t.items()} for t in y]
+                X_stacked = torch.stack(X_list, dim=0)
+                
+                yhat = model(X_stacked)
                 loss_dict = criterion(yhat, y) 
                 weight_dict = criterion.weight_dict
                 losses = (loss_dict['labels']['loss_ce'] * weight_dict['class_weighting'] + 
@@ -102,13 +121,12 @@ if __name__ == '__main__':
         avg_test_loss = test_epoch_loss / test_batches
         print(f"Average Test Loss: {avg_test_loss:.4f}\n")
 
-        #Save checkpoint periodically
-        if (epoch + 1) % 10 == 0: #dividing by 10 means after every 10 epoch it will create checkpoints
+        if (epoch + 1) % 500 == 0: 
             checkpoint_path = f"checkpoints/{epoch+1}_model.pt"
             save(model.state_dict(), checkpoint_path)
             print(f"Checkpoint saved to {checkpoint_path}")
             
-    #Save the final model
     final_path = f"checkpoints/final_model.pt"
     save(model.state_dict(), final_path)
     print(f"Final model saved to {final_path}")
+

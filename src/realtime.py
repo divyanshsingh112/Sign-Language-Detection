@@ -16,9 +16,9 @@ transforms = A.Compose(
         ]
     )
 
-model = DETR(num_classes=3)
+model = DETR(num_classes=8)
 model.eval()
-model.load_pretrained('checkpoints/40_model.pt')
+model.load_pretrained('checkpoints/200_model.pt')
 CLASSES = get_classes() 
 COLORS = get_colors() 
 
@@ -87,10 +87,10 @@ while cap.isOpened():
         cv2.putText(
             frame,
             frame_text,
-            (int(x1), int(y1) - baseline), #Position text correctly
+            (int(x1), int(y1) - baseline), # Position text correctly
             font_face,
             font_scale,
-            (255, 255, 255), #White text for better contrast
+            (255, 255, 255), # White text for better contrast
             font_thickness,
             cv2.LINE_AA
         )
@@ -98,7 +98,7 @@ while cap.isOpened():
         
     frame_count += 1
     elapsed_time = time.time() - fps_start_time
-    if elapsed_time > 1.0: #Update FPS every second
+    if elapsed_time > 1.0: # Update FPS every second
         fps = frame_count / elapsed_time
         print(f"\rFPS: {fps:.2f} | Inference Time: {inference_time:.2f} ms", end="")
         frame_count = 0
