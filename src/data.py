@@ -30,8 +30,14 @@ class DETRData(Dataset):
             A.Resize(500, 500),
             *([A.RandomCrop(width=224, height=224, p=0.33)] if self.train else []),
             A.Resize(224, 224),
+            
+            #Adding More Augmentations for Robustness
             *([A.HorizontalFlip(p=0.5)] if self.train else []),
             *([A.ColorJitter(p=0.5)] if self.train else []),
+            *([A.RandomBrightnessContrast(p=0.4)] if self.train else []), # Simulate lighting changes
+            *([A.GaussNoise(p=0.3)] if self.train else []), # Add noise
+            *([A.Blur(blur_limit=3, p=0.3)] if self.train else []), # Add blur
+
             A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
             A.ToTensorV2()
         ]
