@@ -1,7 +1,7 @@
 import json
 
 # Load the configuration file
-with open('src\config.json', 'r') as f:
+with open('config.json', 'r') as f:
     config = json.load(f)
 
 CLASSES = config['classes']
